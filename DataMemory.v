@@ -45,7 +45,7 @@ module DataMemory(Address, WriteData, Clk, MemWrite, MemRead, ReadData);
     
     reg [31:0] MemArray [0:1023];
 
-    output reg[31:0] ReadData; // Contents of memory location at Address
+    output reg [31:0] ReadData; // Contents of memory location at Address
 
     integer i;
     /* Please fill in the implementation here */
