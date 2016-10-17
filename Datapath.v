@@ -1,16 +1,16 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
+// Company: TosiCorp. Inc.
+// Engineer: Sam Gianelli | Diego Jimenez
+//                  50    |     50
 // Create Date: 10/05/2016 02:28:14 PM
 // Design Name: 
 // Module Name: Datapath
-// Project Name: 
+// Project Name: Single Cycle
 // Target Devices: 
 // Tool Versions: 
-// Description: 
-// 
+// Description:  
+//      
 // Dependencies: 
 // 
 // Revision:
