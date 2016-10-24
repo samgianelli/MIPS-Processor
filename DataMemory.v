@@ -93,14 +93,14 @@ module DataMemory(Address, WriteData, Clk, MemWrite, MemRead, ReadData, MemOp);
                 end
                 
             end
-            else  if (MemOp[3:0] == 4'b1100)begin //sw
+            else if (MemOp[3:0] == 4'b1100)begin //sw
                 MemArray[Address[11:2]] <= WriteData;
             end
     end
     
     always @(MemRead) begin
         if (MemRead == 1) begin
-            if (MemOp[3:0] == 4'b0100) begin //lh
+            if (MemOp[3:0] == 4'b0010) begin //lh
                 if (Address[1:0] == 2'b00) begin
                     ReadData <= {{16{MemArray[Address[11:2]][15]}},{MemArray[Address[11:2]][15:0]}};                
                 end
