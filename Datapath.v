@@ -1,16 +1,16 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: TosiCorp. Inc.
-// Engineer: Sam Gianelli | Diego Jimenez
-//                  50    |     50
+// Company: 
+// Engineer: 
+// 
 // Create Date: 10/05/2016 02:28:14 PM
 // Design Name: 
 // Module Name: Datapath
-// Project Name: Single Cycle
+// Project Name: 
 // Target Devices: 
 // Tool Versions: 
-// Description:  
-//      
+// Description: 
+// 
 // Dependencies: 
 // 
 // Revision:
@@ -20,26 +20,40 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Datapath(Clk, Reset, PC_Counter, Reg_Write);
+module Datapath(Clk, Reset, PC_Counter, Reg_Write, RegWrite_or);
     input Clk, Reset;
     output wire [31:0] PC_Counter;
     output wire [31:0] Reg_Write;
-    wire [31:0] IM_out, ReadReg1, ReadReg2, ALU_out;
+    wire [31:0] IM_out, ReadReg1, ReadReg2; 
+    wire [31:0] ALU_out;
+    
     //// DEBUGGIN OUTPUTS (set back to normal wires when done)///////////
-    wire RegWrite_or;
+    output wire RegWrite_or;
+    wire  Branch_type, Branch_ineq;
     wire [31:0] Mux_Mem, Mux_regData_HiLo;
+    wire [31:0] Mux_regData_Mov;
+    wire [31:0] Mux_Branch_out, Mux_JumpType, Mux_Jump;
+    
     ///// WIRES BETWEEN MODULES ///////////////    FIXME: re-ordr bit declarations to BEFORE name
     wire [63:0] HiLoAddition;
-    wire [31:0] SE_out , Mux_ALU_In, ReadMem, PC_PlusFour, Branch_Shift, regFile_writeData;  //Mux_Mem, Mux_regData_HiLo
+    wire [31:0] SE_out , Mux_ALU_In;
+    wire [31:0] ReadMem;
+    wire [31:0] PC_PlusFour, Branch_Shift, regFile_writeData;  //Mux_Mem, Mux_regData_HiLo
     wire [31:0] ALU_hi, Hi, Lo, Lo_in, Hi_in, HiLo_out, Branch_add, Address_to_PC, RsRtReg, HiRsMux, SignExtendOrNot;
-    wire [4:0] Mux_RegF_In;
+    wire [4:0] Mux_RegF_In, Mux_RegF_RdRt;
+    wire zero_inv;
 
        
     ///// CONTROLLER WIRES ////////////////////   
-    wire [3:0] ALUOp;
-    wire ALUsrc, RegDst, Jump, Branch, MemRead, MemWrite, MemToReg, RegWrite, WriteHi, WriteLo, HiOrLo, HiLoReg, HiLo_sel, ALU_Zero, Mux_Mov;
+    wire [4:0] ALUOp;
+    wire [3:0] MEMop;
+    wire [1:0] BRANCHop;
+    wire ALUsrc, RegDst, Jump, Branch, MemRead, MemWrite, MemToReg, RegWrite, WriteHi, WriteLo, HiOrLo, HiLoReg, HiLo_sel;
+    wire ALU_zero;
+    wire Mux_Mov;
     wire compare_out, xnor_out, Mux_Branch, and_mov_out, RsRtMux, HiRsSel; //RegWrite_or
     wire SignExtensionX, SignExtendImmediate;
+    wire regAddr_jal, regWrite_jal, JumpType, Branch_sel;
     
     
     
@@ -47,7 +61,9 @@ module Datapath(Clk, Reset, PC_Counter, Reg_Write);
     
     // Controller Module
     // CURRENT IS NOT CORRECT
-    Controller Controller_1(IM_out, ALUOp, ALUSrc, RegDst, Jump, Branch, MemRead, MemWrite, MemToReg, RegWrite, WriteHi, WriteLo, HiOrLo, HiLoReg, MovEn, Movz, SignExtensionX, Add64, HiLo_sel, RsRtMux, HiRsSel, SignExtendImmediate);
+    Controller Controller_1(IM_out, ALUOp, ALUSrc, RegDst, Jump, Branch, MemRead, MemWrite, MemToReg, 
+        RegWrite, WriteHi, WriteLo, HiOrLo, HiLoReg, MovEn, Movz, SignExtensionX, Add64, HiLo_sel, RsRtMux, 
+        HiRsSel, SignExtendImmediate, MEMop, BRANCHop, regAddr_jal, regWrite_jal, JumpType, Branch_sel, zero_sel);
     
     // Instruction Fetch Unit  
     ProgramCounter ProgramCounter_1( Address_to_PC, PC_Counter, Reset, Clk);
@@ -55,7 +71,8 @@ module Datapath(Clk, Reset, PC_Counter, Reg_Write);
     InstructionMemory InstructionMemory_1(PC_Counter, IM_out);
     
     // RegisterFile Read
-    Mux5Bit2To1 Mux5Bit2To1_rdReg(Mux_RegF_In, IM_out[20:16], IM_out[15:11], RegDst);
+    Mux5Bit2To1 Mux5Bit2To1_rdReg(Mux_RegF_RdRt, IM_out[20:16], IM_out[15:11], RegDst);
+    Mux5Bit2To1 Mux5Bit2To1_Jal(Mux_RegF_In, Mux_RegF_RdRt, 5'b11111, regAddr_jal);
     RegisterFile RegisterFile_1(IM_out[25:21], IM_out[20:16], Mux_RegF_In, Reg_Write, RegWrite_or, Clk, ReadReg1, ReadReg2);
     SignExtension SignExtension_1(IM_out[15:0], SE_out[31:0]);
     Mux32Bit2To1 Mux32Bit2To1_SignExtendImmediate(SignExtendOrNot, SE_out[31:0] ,{{16{1'b0}},{IM_out[15:0]}} ,SignExtendImmediate );
@@ -64,7 +81,8 @@ module Datapath(Clk, Reset, PC_Counter, Reg_Write);
     
     // RegisterFile Write
     Mux32Bit2To1 Mux32Bit2To1_HiLo(Mux_regData_HiLo, Mux_Mem, HiLo_out, HiLoReg);
-    Mux32Bit2To1 Mux32Bit2To1_Mov(Reg_Write, Mux_regData_HiLo, ReadReg1, MovEn);
+    Mux32Bit2To1 Mux32Bit2To1_Mov(Mux_regData_Mov, Mux_regData_HiLo, ReadReg1, MovEn);
+    Mux32Bit2To1 Mux32Bit2To1_Jal(Reg_Write, Mux_regData_Mov, PC_PlusFour + 32'h00000000, regWrite_jal);
     
     CompareZero CompareZero_2(ReadReg2,compare_out);
     Xnor2 XNOR2_2(compare_out, Movz, xnor_out); 
@@ -73,7 +91,8 @@ module Datapath(Clk, Reset, PC_Counter, Reg_Write);
     
     
     // ALU
-    ALU32Bit ALU32Bit_1(ALUOp, RsRtReg, Mux_ALU_In, ALU_out, ALU_hi, ALU_zero);
+    ALU32Bit ALU32Bit_1( ALUOp, RsRtReg, Mux_ALU_In, ALU_out, ALU_hi, ALU_zero);
+    Mux1Bit2To1 Mux1Bit2To1_ZeroSel(zero_inv, ALU_zero, ~ALU_zero, zero_sel);
     
     // Hi Lo Registers
     HiLoRegisterFile HiLoRegisterFile_1(Clk, Lo_in, HiRsMux, WriteLo, WriteHi, Hi, Lo);
@@ -84,14 +103,19 @@ module Datapath(Clk, Reset, PC_Counter, Reg_Write);
     Mux32Bit2To1 Mux32Bit2To1_HiLoOut(HiLo_out, Lo, Hi, HiOrLo);
     
     // Data Memory Read/Write
-    DataMemory DataMemory_1(ALU_out, ReadReg2, Clk, MemWrite, MemRead, ReadMem);
+    DataMemory DataMemory_1(ALU_out, ReadReg2, Clk, MemWrite, MemRead, ReadMem, MEMop);
     Mux32Bit2To1 Mux32Bit2To1_Mem(Mux_Mem, ALU_out, ReadMem, MemToReg);    //SWAPPED inA and inB TO MATCH CONTROL SIGNAL
     
     // Branch / Jump / +4
-    ShiftLeft2 ShiftLeft2_1(SE_out, Branch_Shift);
+    //ShiftLeft2 ShiftLeft2_Jump(Instruction[25:0], Jump_Shift);
+    Mux32Bit2To1 Mux32Bit2To1_JumpType(Mux_JumpType, {{PC_PlusFour[31:28]},{IM_out[25:0] << 2}}, ReadReg1, JumpType);
+    ShiftLeft2 ShiftLeft2_Branch(SE_out, Branch_Shift);
     Adder32Bit Adder32Bit_Branch(PC_PlusFour, Branch_Shift, Branch_add);
-    And2 And2_Branch(ALU_zero, Branch, Mux_Branch);
-    Mux32Bit2To1 Mux32Bit2To1_Branch(Address_to_PC,PC_PlusFour, Branch_add, Mux_Branch);
+    BranchLogic BranchLogic_1(ALU_out, ALU_zero, BRANCHop, Branch_ineq);
+    Mux1Bit2To1 Mux1Bit2To1_Branch_eqIneq(Branch_type, zero_inv, Branch_ineq, Branch_sel);
+    And2 And2_Branch(Branch_type, Branch, Mux_Branch);
+    Mux32Bit2To1 Mux32Bit2To1_Branch(Mux_Branch_out,PC_PlusFour, Branch_add, Mux_Branch);
+    Mux32Bit2To1 Mux32Bit2To1_BranchOrJump(Address_to_PC, Mux_Branch_out, Mux_JumpType, Jump); 
     
     
     

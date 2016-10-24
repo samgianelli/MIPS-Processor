@@ -9,12 +9,12 @@
 // Description: 
 //////////////////////////////////////////////////////////////////////////////////
 
-module Two4DigitDisplay(Clk, NumberA, NumberB, out7, en_out);
+module Two4DigitDisplay(Clk, Clk_in, NumberA_in, NumberB_in, out7, en_out);
 
-    parameter NUM_WIDTH = 8;
+    parameter NUM_WIDTH = 32;    //was 8 bits
 
-    input  Clk;
-    input  [NUM_WIDTH - 1:0] NumberA, NumberB;
+    input  Clk, Clk_in;
+    input  [NUM_WIDTH - 1:0] NumberA_in, NumberB_in;
     output [6:0] out7; //seg a, b, ... g
     output reg [7:0] en_out;
              
@@ -27,6 +27,13 @@ module Two4DigitDisplay(Clk, NumberA, NumberB, out7, en_out);
     reg  [3:0] seconddigitB;
     reg  [3:0] thirddigitB;
     reg  [3:0] forthdigitB;
+    
+    reg [NUM_WIDTH - 1:0] NumberA, NumberB;
+    
+    always @(posedge Clk_in) begin    // synch to negative clock edge so the display of PC and RegWrite line up on FPGA
+        NumberA <= NumberA_in;
+        NumberB <= NumberB_in;
+    end
     
     //--------- --------- --------- --------- //
     //-- to use the module SevenSegment 

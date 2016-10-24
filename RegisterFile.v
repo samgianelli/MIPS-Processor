@@ -6,8 +6,8 @@
 //
 //
 // Student(s) Name and Last Name: FILL IN YOUR INFO HERE!
-// Sam Gianelli | Diego Jimenez
-//      50      |      50
+//
+//
 // Module - register_file.v
 // Description - Implements a register file with 32 32-Bit wide registers.
 //

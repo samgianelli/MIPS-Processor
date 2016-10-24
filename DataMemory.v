@@ -54,12 +54,12 @@ module DataMemory(Address, WriteData, Clk, MemWrite, MemRead, ReadData, MemOp);
             MemArray[i] = 32'h00000000;
         end
         //.word 0, 1, 2, 3, 4 , -1
-        MemArray[0] <= 32'd0;
-        MemArray[1] <= 32'd1;
-        MemArray[2] <= 32'd2;
-        MemArray[3] <= 32'd3;
-        MemArray[4] <= 32'd4;
-        MemArray[5] <= -32'd1;        
+        MemArray[0] = 32'h0;
+        MemArray[1] = 32'h1;
+        MemArray[2] = 32'h2;
+        MemArray[3] = 32'h3;
+        MemArray[4] = 32'h4;
+        MemArray[5] = -32'h1;       
     end
     
     always @(posedge Clk) begin
@@ -98,7 +98,7 @@ module DataMemory(Address, WriteData, Clk, MemWrite, MemRead, ReadData, MemOp);
             end
     end
     
-    always @(MemRead) begin
+    always @(Clk) begin
         if (MemRead == 1) begin
             if (MemOp[3:0] == 4'b0010) begin //lh
                 if (Address[1:0] == 2'b00) begin

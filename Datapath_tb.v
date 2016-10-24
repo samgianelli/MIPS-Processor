@@ -23,14 +23,16 @@
 module Datapath_tb( );
     reg Clk, Reset;
     wire [31:0] PC_Counter;
-    wire [31:0] Reg_Write;    
+    wire [31:0] Reg_Write; 
+    wire RegWrite_or;
     //wire [31:0] IM_out, ReadReg1, ReadReg2, ALU_out, Mux_Mem, Mux_regData_HiLo;
     
     Datapath Datapath_1(
     .Clk(Clk), 
     .Reset(Reset), 
     .PC_Counter(PC_Counter), 
-    .Reg_Write(Reg_Write)
+    .Reg_Write(Reg_Write),
+    .RegWrite_or(RegWrite_or)
     );
     
     
@@ -39,9 +41,15 @@ module Datapath_tb( );
         forever #10 Clk <= ~Clk;
     end    
     
-        initial begin 
+    initial begin 
         Reset <= 1;
-        #102;
+        #18;
+        Reset <= 0;
+        #1;
+        Reset <= 1;
+        #18;
+        //Reset <= 0;
+        
         Reset <= 0;
         #2700;
         Reset <= 1;

@@ -48,8 +48,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module ALU32Bit(ALUControl, A, B, ALUResult, HiResult, Zero);
-
-	input [3:0] ALUControl; // control bits for ALU operation
+	input [4:0] ALUControl; // control bits for ALU operation
 	input [31:0] A, B;	    // inputs
 
 	output reg [31:0] ALUResult;	// answer               NOTE: Did not have the 'reg' in the outline file
@@ -60,27 +59,27 @@ module ALU32Bit(ALUControl, A, B, ALUResult, HiResult, Zero);
     always @(A, B, ALUControl, ALUResult) begin
         case (ALUControl)
             
-            4'b0000: begin  //AND
+            5'b00000: begin  //AND
                 ALUResult <= A & B;
             end
         
-            4'b0001: begin  //OR
+            5'b00001: begin  //OR
                 ALUResult <= A | B;
             end
             
-            4'b0010: begin  //ADD
+            5'b00010: begin  //ADD
                 ALUResult <= A + B;
             end
             
-            4'b0011: begin  //XOR
+            5'b00011: begin  //XOR
                 ALUResult <= A ^ B;
             end
             
-            4'b0100: begin  //NOR
+            5'b00100: begin  //NOR
                 ALUResult <= ~(A | B);
             end
             
-            4'b0101: begin // SRA    can use >>> to sign extend signed values
+            5'b00101: begin // SRA    can use >>> to sign extend signed values
                 if (B[31] == 1'b1) begin
                      ALUResult <= (32'hffffffff << ('d32-A)) | (B >> A);
                 end
@@ -89,48 +88,53 @@ module ALU32Bit(ALUControl, A, B, ALUResult, HiResult, Zero);
                 end
             end
             
-            4'b0110: begin  //SUB
+            5'b00110: begin  //SUB
                 ALUResult <= A - B;
             end
             
-            4'b0111: begin  //SLT
+            5'b00111: begin  //SLT
                 if (A < B)
                     ALUResult <= 32'h00000001;
                 else
                     ALUResult <= 32'h00000000;
             end
             
-            4'b1000: begin  //SLL
+            5'b01000: begin  //SLL
                 ALUResult <= B << A;
             end
             
-            4'b1001: begin  //SRL
+            5'b01001: begin  //SRL
                 ALUResult <= B >> A;
             end
             
-            4'b1010: begin  //MUL
+            5'b01010: begin  //MUL
                 {{HiResult}, {ALUResult}} <= $signed(A * B);
             end
             
-            4'b1011: begin //MUL U
+            5'b01011: begin //MUL U
                 {{HiResult}, {ALUResult}} <= A * B;
             end
             
-            4'b1100: begin  //ROT Right
+            5'b01100: begin  //ROT Right
                 ALUResult <= (B << ('d32-A)) | (B >> A);
             end  
             
-            4'b1101: begin  // SEB
+            5'b01101: begin  // SEB
                 ALUResult <= {{24{B[7]}},{B[7:0]}};
             end
             
-            4'b1110: begin // SEH
+            5'b01110: begin // SEH
                 ALUResult <= {{16{B[15]}},{B[15:0]}};
             end
             
-            4'b1111: begin  //AND
-                ALUResult <= A & {{16{1'b0}}, {B[15:0]}};
+            5'b01111: begin  //was AND, is now a default rs output
+                ALUResult <= A;  //A & {{16{1'b0}}, {B[15:0]}};
             end
+            
+            5'b10000: begin
+                ALUResult <= B << 16;
+            end
+            
             default: begin            //REMOVE IF THIS PROVES TO BE UNNECESSARY
                 ALUResult <= 32'h00000000;
             end
